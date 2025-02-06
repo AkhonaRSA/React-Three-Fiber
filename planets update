@@ -1,0 +1,143 @@
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars, Text, useTexture, useCursor } from "@react-three/drei";
+import { useRef, useState } from "react";
+import * as THREE from "three";
+
+function Planet({ name, color, size, distance, speed, texture }) {
+  const planetRef = useRef();
+  const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+  const textureMap = useTexture(texture);
+
+  useCursor(hovered); // Change cursor on hover
+
+  useFrame((state) => {
+    // Rotate planet
+    planetRef.current.rotation.y += 0.01;
+
+    // Orbit animation
+    const time = state.clock.elapsedTime * speed;
+    planetRef.current.position.x = Math.sin(time) * distance;
+    planetRef.current.position.z = Math.cos(time) * distance;
+  });
+
+  return (
+    <group>
+      {/* Planet */}
+      <mesh
+        ref={planetRef}
+        onClick={() => setClicked(!clicked)}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[size, 32, 32]} />
+        <meshStandardMaterial
+          map={textureMap}
+          color={hovered ? "white" : color}
+          emissive={clicked ? color : "black"}
+          emissiveIntensity={clicked ? 1 : 0}
+        />
+      </mesh>
+
+      {/* Planet Label */}
+      {hovered && (
+        <Text
+          position={[0, size + 0.5, 0]}
+          fontSize={0.2}
+          color="white"
+          anchorX="center"
+        >
+          {name}
+        </Text>
+      )}
+
+      {/* Orbit Path */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[distance - 0.1, distance + 0.1, 64]} />
+        <meshBasicMaterial color="gray" side={THREE.DoubleSide} transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
+}
+
+function Sun() {
+  const texture = useTexture("https://i.imgur.com/3JYdQEj.jpg"); // Sun texture
+  return (
+    <mesh>
+      <sphereGeometry args={[3, 32, 32]} />
+      <meshStandardMaterial
+        map={texture}
+        emissive="orange"
+        emissiveIntensity={2}
+      />
+    </mesh>
+  );
+}
+
+export default function App() {
+  const [target, setTarget] = useState([0, 0, 0]);
+
+  return (
+    <Canvas camera={{ position: [0, 25, 25], fov: 45 }}>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[0, 0, 0]} intensity={2} />
+
+      {/* Sun */}
+      <Sun />
+
+      {/* Planets */}
+      <Planet
+        name="Mercury"
+        color="orange"
+        size={0.4}
+        distance={5}
+        speed={0.02}
+        texture="https://i.imgur.com/9v9ZQ7i.jpg"
+      />
+      <Planet
+        name="Venus"
+        color="gold"
+        size={0.6}
+        distance={8}
+        speed={0.015}
+        texture="https://i.imgur.com/5KXZb9J.jpg"
+      />
+      <Planet
+        name="Earth"
+        color="blue"
+        size={0.8}
+        distance={12}
+        speed={0.01}
+        texture="https://i.imgur.com/5Q6yfQq.jpg"
+      />
+      <Planet
+        name="Mars"
+        color="red"
+        size={0.5}
+        distance={15}
+        speed={0.008}
+        texture="https://i.imgur.com/ViZPgTv.jpg"
+      />
+      <Planet
+        name="Jupiter"
+        color="brown"
+        size={1.5}
+        distance={20}
+        speed={0.005}
+        texture="https://i.imgur.com/7v9ZQ7i.jpg"
+      />
+
+      {/* Stars */}
+      <Stars radius={100} depth={50} count={5000} factor={4} fade />
+
+      {/* Camera Controls */}
+      <OrbitControls
+        enableZoom={true}
+        enablePan={true}
+        minDistance={5}
+        maxDistance={50}
+        target={new THREE.Vector3(...target)}
+      />
+    </Canvas>
+  );
+}
