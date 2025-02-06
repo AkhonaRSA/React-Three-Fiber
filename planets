@@ -1,0 +1,78 @@
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars, Text, useTexture } from "@react-three/drei";
+import { useRef } from "react";
+import * as THREE from "three";
+
+function Planet({ name, color, size, distance, speed }) {
+  const planetRef = useRef();
+  const texture = useTexture({
+    map: "https://i.imgur.com/5Q6yfQq.jpg", // Earth texture
+  });
+
+  return (
+    <group>
+      <mesh
+        ref={planetRef}
+        position={[distance, 0, 0]}
+        onClick={() => console.log(`Clicked ${name}`)}
+      >
+        <sphereGeometry args={[size, 32, 32]} />
+        <meshStandardMaterial {...texture} color={color} />
+      </mesh>
+
+      <Text
+        position={[distance, size + 0.5, 0]}
+        fontSize={0.2}
+        color="white"
+        anchorX="center"
+      >
+        {name}
+      </Text>
+
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[distance - 0.1, distance + 0.1, 64]} />
+        <meshBasicMaterial
+          color="gray"
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function Sun() {
+  const texture = useTexture({
+    map: "https://i.imgur.com/3JYdQEj.jpg", // Sun texture
+  });
+
+  return (
+    <mesh>
+      <sphereGeometry args={[2, 32, 32]} />
+      <meshStandardMaterial
+        {...texture}
+        emissive="orange"
+        emissiveIntensity={2}
+      />
+    </mesh>
+  );
+}
+
+export default function App() {
+  return (
+    <Canvas camera={{ position: [0, 25, 25], fov: 45 }}>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[0, 0, 0]} intensity={1.5} />
+
+      <Sun />
+
+      <Planet name="Earth" color="blue" size={0.8} distance={8} />
+      <Planet name="Mars" color="red" size={0.5} distance={12} />
+      <Planet name="Venus" color="gold" size={0.7} distance={5} />
+
+      <Stars radius={100} depth={50} count={2000} factor={4} fade />
+      <OrbitControls enableZoom={true} minDistance={10} maxDistance={50} />
+    </Canvas>
+  );
+}
