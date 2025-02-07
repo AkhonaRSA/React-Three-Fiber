@@ -1,0 +1,77 @@
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars, Text, useTexture, useCursor, Effects, useVideoTexture, LensFlare } from "@react-three/drei";
+import { useRef, useState, useEffect } from "react";
+import { useFrame, extend } from "@react-three/fiber";
+import { Bloom, DepthOfField, EffectComposer } from "@react-three/postprocessing";
+import * as THREE from "three";
+import { Leva, useControls } from "leva";
+
+// ... (other components: Planet, AsteroidBelt, Sun, InfoPanel, etc.)
+
+import Comet from "./Comet"; // Import the new comet component
+
+export default function App() {
+  const [selectedPlanet, setSelectedPlanet] = useState(null);
+  const controls = useControls({
+    planetSpeed: { value: 1, min: 0, max: 5 },
+    bloom: { value: true },
+    dof: { value: true }
+  });
+
+  return (
+    <>
+      <Leva />
+      <Canvas camera={{ position: [0, 40, 40], fov: 45 }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[0, 0, 0]} intensity={2} />
+
+        {/* Celestial bodies */}
+        <Sun />
+        <AsteroidBelt />
+        
+        {/* Planet */}
+        <Planet
+          name="Earth"
+          size={0.8}
+          distance={12}
+          speed={0.01 * controls.planetSpeed}
+          texture="https://i.imgur.com/5Q6yfQq.jpg"
+          info={{
+            name: "Earth",
+            diameter: "12,742",
+            orbitalPeriod: "365",
+            temperature: "15°C",
+            description: "The Blue Planet - Our home world"
+          }}
+          setSelectedPlanet={setSelectedPlanet}
+        />
+
+        {/* New Comet Component */}
+        <Comet
+          speed={0.02}
+          trailLength={50}
+          texture="https://i.imgur.com/your-comet-texture.jpg" // Update this URL as needed
+        />
+
+        {/* Effects */}
+        <EffectComposer>
+          {controls.bloom && <Bloom intensity={0.5} luminanceThreshold={0.8} />}
+          {controls.dof && <DepthOfField focusDistance={0} focalLength={0.02} bokehScale={2} />}
+        </EffectComposer>
+
+        {/* Stars */}
+        <Stars radius={100} depth={50} count={5000} factor={4} fade />
+
+        {/* Camera Controls */}
+        <OrbitControls
+          enableZoom={true}
+          minDistance={10}
+          maxDistance={100}
+          autoRotateSpeed={0.5}
+        />
+      </Canvas>
+
+      <InfoPanel planet={selectedPlanet} />
+    </>
+  );
+}
